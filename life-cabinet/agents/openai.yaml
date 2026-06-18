@@ -1,0 +1,4 @@
+interface:
+  display_name: "人生内阁团"
+  short_description: "召集 AI 人生内阁团，辅助职业事业与重大人生决策"
+  default_prompt: "Use $life-cabinet 召集人生内阁团，帮我分析这个决策："

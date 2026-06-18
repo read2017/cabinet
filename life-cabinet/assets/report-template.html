@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{REPORT_TITLE}}</title>
+  <style>
+    :root {
+      --paper: #fbfaf7;
+      --ink: #202124;
+      --muted: #69645e;
+      --line: #d8d1c6;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-2: #8b5e34;
+      --risk: #b42318;
+      --note: #365314;
+      --toc: #1f2937;
+      --shadow: 0 18px 50px rgba(32, 33, 36, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Songti SC", "Noto Serif CJK SC", "Source Han Serif SC", Georgia, serif;
+      line-height: 1.68;
+    }
+
+    .toc-toggle {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      z-index: 30;
+      width: 44px;
+      height: 44px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--toc);
+      box-shadow: 0 10px 24px rgba(32, 33, 36, 0.12);
+      cursor: pointer;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .toc-panel {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 40;
+      width: min(340px, 86vw);
+      height: 100vh;
+      padding: 26px 24px;
+      overflow-y: auto;
+      background: #fff;
+      border-right: 1px solid var(--line);
+      box-shadow: 20px 0 50px rgba(32, 33, 36, 0.16);
+      transform: translateX(-105%);
+      transition: transform 180ms ease;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    body.toc-open .toc-panel {
+      transform: translateX(0);
+    }
+
+    .toc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toc-header strong {
+      font-size: 16px;
+    }
+
+    .toc-close {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .toc-panel nav a {
+      display: block;
+      padding: 8px 0;
+      color: var(--toc);
+      text-decoration: none;
+      border-bottom: 1px solid #eee8df;
+      font-size: 14px;
+    }
+
+    .toc-panel nav a:hover {
+      color: var(--accent);
+    }
+
+    .toc-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 35;
+      display: none;
+      background: rgba(32, 33, 36, 0.24);
+    }
+
+    body.toc-open .toc-backdrop {
+      display: block;
+    }
+
+    .page {
+      width: min(980px, calc(100% - 32px));
+      margin: 32px auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    header {
+      padding: 42px 48px 32px;
+      border-bottom: 3px solid var(--ink);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 760px;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 18px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 28px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .meta div {
+      border-left: 3px solid var(--accent);
+      padding-left: 12px;
+      min-width: 0;
+    }
+
+    .meta span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .meta strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    main {
+      padding: 36px 48px 48px;
+    }
+
+    section {
+      margin: 0 0 34px;
+      break-inside: avoid;
+      scroll-margin-top: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 20px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 16px;
+      line-height: 1.35;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    ul, ol {
+      margin: 8px 0 0;
+      padding-left: 24px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f3efe8;
+      font-weight: 700;
+    }
+
+    .callout {
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-left: 5px solid var(--accent);
+      background: #eef8f6;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .risk {
+      border-left-color: var(--risk);
+      background: #fff1f0;
+    }
+
+    .note {
+      border-left-color: var(--note);
+      background: #f4f8e8;
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .role {
+      border: 1px solid var(--line);
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .role strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--accent-2);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .artifact-links {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .artifact-links a {
+      display: block;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      color: var(--ink);
+      text-decoration: none;
+      background: #fffdfa;
+    }
+
+    .artifact-links a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .meeting-record {
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    .footer {
+      padding: 22px 48px 30px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        width: 100%;
+        margin: 0;
+        border: 0;
+      }
+
+      header, main, .footer {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .toc-toggle {
+        top: 12px;
+        left: 12px;
+      }
+
+      .meta, .role-grid, .artifact-links {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .toc-toggle, .toc-panel, .toc-backdrop {
+        display: none !important;
+      }
+
+      .page {
+        width: 100%;
+        margin: 0;
+        border: 0;
+        box-shadow: none;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="toc-toggle" type="button" aria-label="打开目录" aria-controls="toc-panel" aria-expanded="false">☰</button>
+  <div class="toc-backdrop" data-close-toc></div>
+  <aside class="toc-panel" id="toc-panel" aria-label="报告目录">
+    <div class="toc-header">
+      <strong>目录</strong>
+      <button class="toc-close" type="button" aria-label="关闭目录" data-close-toc>×</button>
+    </div>
+    <nav>
+      <a href="#executive-summary">一、执行摘要</a>
+      <a href="#decision-context">二、决策问题与用户画像</a>
+      <a href="#decision-framework">三、备选方案与判断标准</a>
+      <a href="#core-analysis">四、核心结论与成立条件</a>
+      <a href="#deep-analysis">五、结构化论证</a>
+      <a href="#red-team">六、红队预演与风险登记</a>
+      <a href="#roadmap">七、决策阈值与行动路线图</a>
+      <a href="#professional-flags">八、专业咨询提示</a>
+      <a href="#artifacts">九、中间稿附件</a>
+      <a href="#meeting-summary">十、会议纪要</a>
+      <a href="#full-meeting-record">十一、完整会议记录</a>
+    </nav>
+  </aside>
+
+  <article class="page">
+    <header>
+      <p class="eyebrow">AI 人生内阁团报告</p>
+      <h1>{{REPORT_TITLE}}</h1>
+      <p class="subtitle">{{REPORT_SUBTITLE}}</p>
+      <div class="meta" aria-label="报告信息">
+        <div>
+          <span>会议模式</span>
+          <strong>{{MEETING_FORMAT}}</strong>
+        </div>
+        <div>
+          <span>生成时间</span>
+          <strong>{{GENERATED_AT}}</strong>
+        </div>
+        <div>
+          <span>决策状态</span>
+          <strong>{{DECISION_STATUS}}</strong>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section id="executive-summary">
+        <h2>一、执行摘要</h2>
+        <div class="callout">
+          {{EXECUTIVE_SUMMARY_HTML}}
+        </div>
+      </section>
+
+      <section id="decision-context">
+        <h2>二、决策问题与用户画像</h2>
+        {{SITUATION_HTML}}
+        {{USER_PROFILE_ASSUMPTIONS_HTML}}
+      </section>
+
+      <section id="decision-framework">
+        <h2>三、备选方案与判断标准</h2>
+        {{OPTIONS_FRAMEWORK_HTML}}
+      </section>
+
+      <section id="core-analysis">
+        <h2>四、核心结论与成立条件</h2>
+        {{DECISION_LOGIC_HTML}}
+      </section>
+
+      <section id="deep-analysis">
+        <h2>五、结构化论证</h2>
+        {{DISCUSSION_HTML}}
+        {{SCENARIO_ANALYSIS_HTML}}
+      </section>
+
+      <section id="red-team">
+        <h2>六、红队预演与风险登记</h2>
+        <div class="callout risk">
+          {{RED_TEAM_HTML}}
+        </div>
+        {{RISK_REGISTER_HTML}}
+      </section>
+
+      <section id="roadmap">
+        <h2>七、决策阈值与行动路线图</h2>
+        {{ROADMAP_HTML}}
+        {{NEXT_ACTIONS_HTML}}
+        {{OPEN_QUESTIONS_HTML}}
+      </section>
+
+      <section id="professional-flags">
+        <h2>八、专业咨询提示</h2>
+        <div class="callout note">
+          {{PROFESSIONAL_FLAGS_HTML}}
+        </div>
+      </section>
+
+      <section id="artifacts">
+        <h2>九、中间稿附件</h2>
+        <p>本报告先展示秘书长整理后的专业分析。会议讨论原始材料和分析备忘录已单独落盘，便于复核推理过程。</p>
+        <div class="artifact-links">
+          {{ARTIFACT_LINKS_HTML}}
+        </div>
+      </section>
+
+      <section id="meeting-summary">
+        <h2>十、会议纪要</h2>
+        {{MEETING_SUMMARY_HTML}}
+      </section>
+
+      <section id="full-meeting-record">
+        <h2>十一、完整会议记录</h2>
+        <div class="meeting-record">
+          {{FULL_MEETING_RECORD_HTML}}
+        </div>
+      </section>
+
+      <section id="participants">
+        <h2>十二、参会成员</h2>
+        <div class="role-grid">
+          {{PARTICIPANTS_HTML}}
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      {{FOOTER_NOTE}}
+    </footer>
+  </article>
+
+  <script>
+    const toggle = document.querySelector('.toc-toggle');
+    const closeTargets = document.querySelectorAll('[data-close-toc], .toc-panel nav a');
+
+    function setToc(open) {
+      document.body.classList.toggle('toc-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    }
+
+    toggle.addEventListener('click', () => {
+      setToc(!document.body.classList.contains('toc-open'));
+    });
+
+    closeTargets.forEach((target) => {
+      target.addEventListener('click', () => setToc(false));
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') setToc(false);
+    });
+  </script>
+</body>
+</html>
