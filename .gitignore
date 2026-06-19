@@ -1,4 +1,6 @@
 /*
 !/.gitignore
+!/README.md
+!/LICENSE
 !/life-cabinet/
 .DS_Store
